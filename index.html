@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="text-center mb-4">لوحة التحكم</h2>
+    </div>
+</div>
+
+<div class="row">
+    <!-- إحصائيات سريعة -->
+    <div class="col-md-3">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-body">
+                <h5 class="card-title">المبيعات اليوم</h5>
+                <h3 class="card-text">{{ daily_sales|default('0.00') }} ج.م</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body">
+                <h5 class="card-title">عدد الكتب</h5>
+                <h3 class="card-text">{{ total_books|default('0') }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning mb-3">
+            <div class="card-body">
+                <h5 class="card-title">الكتب منخفضة المخزون</h5>
+                <h3 class="card-text">{{ low_stock|default('0') }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-body">
+                <h5 class="card-title">العملاء النشطين</h5>
+                <h3 class="card-text">{{ active_customers|default('0') }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- الكتب الأكثر مبيعاً -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>الكتب الأكثر مبيعاً</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>الكتاب</th>
+                                <th>المؤلف</th>
+                                <th>المبيعات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for book in top_books|default([]) %}
+                            <tr>
+                                <td>{{ book.title }}</td>
+                                <td>{{ book.author }}</td>
+                                <td>{{ book.sales }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- آخر المعاملات -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>آخر المعاملات</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>التاريخ</th>
+                                <th>العميل</th>
+                                <th>المبلغ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in recent_transactions|default([]) %}
+                            <tr>
+                                <td>{{ transaction.date }}</td>
+                                <td>{{ transaction.customer }}</td>
+                                <td>{{ transaction.amount }} ج.م</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

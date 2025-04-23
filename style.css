@@ -1,0 +1,99 @@
+/* التنسيقات العامة */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* تنسيق البطاقات */
+.card {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    padding: 15px;
+}
+
+/* تنسيق الجداول */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+}
+
+.table td, .table th {
+    padding: 12px;
+    vertical-align: middle;
+}
+
+/* تنسيق النماذج */
+.form-control {
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* تنسيق الأزرار */
+.btn {
+    border-radius: 6px;
+    padding: 8px 16px;
+}
+
+/* تنسيق شريط التنقل */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+/* تنسيق البطاقات الإحصائية */
+.card.bg-primary, .card.bg-success, 
+.card.bg-warning, .card.bg-info {
+    border: none;
+}
+
+.card.bg-primary .card-body, 
+.card.bg-success .card-body,
+.card.bg-warning .card-body,
+.card.bg-info .card-body {
+    padding: 20px;
+}
+
+.card-title {
+    margin-bottom: 10px;
+    font-size: 1rem;
+}
+
+.card-text {
+    margin-bottom: 0;
+    font-weight: bold;
+}
+
+/* تنسيق التنبيهات */
+.alert {
+    border-radius: 6px;
+    padding: 12px 20px;
+    margin-bottom: 20px;
+}
+
+/* تحسين العرض على الشاشات الصغيرة */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+}

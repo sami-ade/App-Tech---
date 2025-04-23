@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>إدارة المستخدمين</h2>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                إضافة مستخدم جديد
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- جدول المستخدمين -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>اسم المستخدم</th>
+                        <th>الاسم الكامل</th>
+                        <th>البريد الإلكتروني</th>
+                        <th>الدور</th>
+                        <th>الحالة</th>
+                        <th>آخر دخول</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.full_name }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.is_admin() %}
+                            <span class="badge bg-danger">مدير</span>
+                            {% else %}
+                            <span class="badge bg-primary">مستخدم</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.is_active %}
+                            <span class="badge bg-success">نشط</span>
+                            {% else %}
+                            <span class="badge bg-warning">معطل</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'لم يسجل دخول' }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-info" onclick="editUser('{{ user.id }}')">
+                                    تعديل
+                                </button>
+                                <button class="btn btn-sm btn-{{ 'warning' if user.is_active else 'success' }}"
+                                        onclick="toggleUserStatus('{{ user.id }}')">
+                                    {{ 'تعطيل' if user.is_active else 'تفعيل' }}
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- نموذج إضافة/تعديل مستخدم -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إضافة مستخدم جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm" method="POST" action="{{ url_for('add_user') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">اسم المستخدم</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label">الاسم الكامل</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">كلمة المرور</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">البريد الإلكتروني</label>
+                        <input type="email" class="form-control" id="email" name="email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">رقم الهاتف</label>
+                        <input type="tel" class="form-control" id="phone" name="phone">
+                    </div>
+                    <div class="mb-3">
+                        <label for="role" class="form-label">الدور</label>
+                        <select class="form-select" id="role" name="role" required>
+                            <option value="user">مستخدم</option>
+                            <option value="admin">مدير</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">الصلاحيات</label>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="can_manage_inventory" name="can_manage_inventory">
+                            <label class="form-check-label" for="can_manage_inventory">إدارة المخزون</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="can_manage_sales" name="can_manage_sales">
+                            <label class="form-check-label" for="can_manage_sales">إدارة المبيعات</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="can_manage_purchases" name="can_manage_purchases">
+                            <label class="form-check-label" for="can_manage_purchases">إدارة المشتريات</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="can_manage_customers" name="can_manage_customers">
+                            <label class="form-check-label" for="can_manage_customers">إدارة العملاء</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="can_manage_suppliers" name="can_manage_suppliers">
+                            <label class="form-check-label" for="can_manage_suppliers">إدارة الموردين</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="can_manage_users" name="can_manage_users">
+                            <label class="form-check-label" for="can_manage_users">إدارة المستخدمين</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="can_view_reports" name="can_view_reports">
+                            <label class="form-check-label" for="can_view_reports">عرض التقارير</label>
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editUser(userId) {
+    fetch(`/api/users/${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const user = data.user;
+                document.getElementById('username').value = user.username;
+                document.getElementById('full_name').value = user.full_name;
+                document.getElementById('email').value = user.email;
+                document.getElementById('phone').value = user.phone;
+                document.getElementById('role').value = user.role;
+                
+                // تحديث الصلاحيات
+                for (const [key, value] of Object.entries(user.permissions)) {
+                    document.getElementById(`can_${key}`).checked = value;
+                }
+                
+                // تحديث النموذج
+                const form = document.getElementById('userForm');
+                form.action = `/api/users/${userId}/update`;
+                document.querySelector('#addUserModal .modal-title').textContent = 'تعديل بيانات المستخدم';
+                
+                // إخفاء حقل كلمة المرور
+                document.querySelector('.password-field').style.display = 'none';
+                
+                // عرض النموذج
+                const modal = new bootstrap.Modal(document.getElementById('addUserModal'));
+                modal.show();
+            }
+        });
+}
+
+function toggleUserStatus(userId) {
+    if (confirm('هل أنت متأكد من تغيير حالة المستخدم؟')) {
+        fetch(`/api/users/${userId}/toggle-status`, {
+            method: 'POST'
+        })
+        .then(() => location.reload());
+    }
+}
+
+// تحديث الصلاحيات عند تغيير الدور
+document.getElementById('role').addEventListener('change', function() {
+    const isAdmin = this.value === 'admin';
+    const permissions = document.querySelectorAll('input[type="checkbox"]');
+    permissions.forEach(p => {
+        p.checked = isAdmin;
+        p.disabled = isAdmin;
+    });
+});
+</script>
+{% endblock %}

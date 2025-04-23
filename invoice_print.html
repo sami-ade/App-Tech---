@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فاتورة #{{ invoice.invoice_number }}</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+        }
+        .invoice-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .invoice-title {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .store-info {
+            margin-bottom: 20px;
+        }
+        .invoice-details {
+            margin-bottom: 20px;
+        }
+        .customer-info {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: right;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        .totals {
+            float: left;
+            width: 300px;
+        }
+        .totals table {
+            margin-bottom: 0;
+        }
+        .footer {
+            clear: both;
+            margin-top: 40px;
+            text-align: center;
+            font-size: 14px;
+        }
+        @media print {
+            body {
+                padding: 0;
+                print-color-adjust: exact;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-header">
+        <div class="invoice-title">فاتورة مبيعات</div>
+        <div class="store-info">
+            <h2>مكتبة الأدوات المدرسية</h2>
+            <p>العنوان: ...</p>
+            <p>الهاتف: ...</p>
+        </div>
+    </div>
+
+    <div class="invoice-details">
+        <table>
+            <tr>
+                <td><strong>رقم الفاتورة:</strong> {{ invoice.invoice_number }}</td>
+                <td><strong>التاريخ:</strong> {{ invoice.date.strftime('%Y-%m-%d %H:%M') }}</td>
+            </tr>
+        </table>
+    </div>
+
+    {% if invoice.customer %}
+    <div class="customer-info">
+        <table>
+            <tr>
+                <td><strong>اسم العميل:</strong> {{ invoice.customer.name }}</td>
+                <td><strong>رقم الهاتف:</strong> {{ invoice.customer.phone }}</td>
+            </tr>
+        </table>
+    </div>
+    {% endif %}
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>المنتج</th>
+                <th>الكمية</th>
+                <th>السعر</th>
+                <th>الخصم</th>
+                <th>الإجمالي</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in invoice.items %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.price }} ج.م</td>
+                <td>{{ item.discount }} ج.م</td>
+                <td>{{ item.total }} ج.م</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals">
+        <table>
+            <tr>
+                <td><strong>إجمالي المنتجات:</strong></td>
+                <td>{{ "%.2f"|format(invoice.total_amount + invoice.discount) }} ج.م</td>
+            </tr>
+            <tr>
+                <td><strong>الخصم:</strong></td>
+                <td>{{ "%.2f"|format(invoice.discount) }} ج.م</td>
+            </tr>
+            <tr>
+                <td><strong>الإجمالي النهائي:</strong></td>
+                <td>{{ "%.2f"|format(invoice.total_amount) }} ج.م</td>
+            </tr>
+            <tr>
+                <td><strong>المدفوع:</strong></td>
+                <td>{{ "%.2f"|format(invoice.paid_amount) }} ج.م</td>
+            </tr>
+            <tr>
+                <td><strong>المتبقي:</strong></td>
+                <td>{{ "%.2f"|format(invoice.total_amount - invoice.paid_amount) }} ج.م</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="footer">
+        <p>شكراً لتعاملكم معنا</p>
+        <p>{{ invoice.notes }}</p>
+    </div>
+
+    <div class="no-print" style="margin-top: 20px; text-align: center;">
+        <button onclick="window.print()">طباعة الفاتورة</button>
+    </div>
+</body>
+</html>

@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>إدارة المبيعات</h2>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createInvoiceModal">
+                فاتورة جديدة
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- جدول الفواتير -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>رقم الفاتورة</th>
+                        <th>التاريخ</th>
+                        <th>العميل</th>
+                        <th>الإجمالي</th>
+                        <th>المدفوع</th>
+                        <th>المتبقي</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in invoices %}
+                    <tr>
+                        <td>{{ invoice.invoice_number }}</td>
+                        <td>{{ invoice.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ invoice.customer.name if invoice.customer else 'عميل نقدي' }}</td>
+                        <td>{{ invoice.total_amount }} ج.م</td>
+                        <td>{{ invoice.paid_amount }} ج.م</td>
+                        <td>{{ invoice.total_amount - invoice.paid_amount }} ج.م</td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-info" onclick="window.open('/api/sales/{{ invoice.id }}/print')">
+                                    طباعة
+                                </button>
+                                {% if current_user.is_admin() %}
+                                <button class="btn btn-sm btn-danger" 
+                                        onclick="confirmDelete(event, 'هل أنت متأكد من حذف هذه الفاتورة؟')">
+                                    حذف
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- نموذج إنشاء فاتورة -->
+<div class="modal fade" id="createInvoiceModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">فاتورة جديدة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="invoiceForm">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="customer" class="form-label">العميل</label>
+                            <select class="form-select" id="customer" name="customer_id">
+                                <option value="">عميل نقدي</option>
+                                {% for customer in customers %}
+                                <option value="{{ customer.id }}">{{ customer.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="payment_method" class="form-label">طريقة الدفع</label>
+                            <select class="form-select" id="payment_method" name="payment_method" required>
+                                <option value="cash">نقداً</option>
+                                <option value="card">بطاقة بنكية</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- إضافة المنتجات -->
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <h6 class="mb-0">المنتجات</h6>
+                            <button type="button" class="btn btn-sm btn-success ms-2" onclick="addProductRow()">
+                                إضافة منتج
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table" id="productsTable">
+                                <thead>
+                                    <tr>
+                                        <th>الباركود</th>
+                                        <th>المنتج</th>
+                                        <th>الكمية</th>
+                                        <th>السعر</th>
+                                        <th>الخصم</th>
+                                        <th>الإجمالي</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="4"></td>
+                                        <td>الإجمالي:</td>
+                                        <td><span id="totalAmount">0.00</span> ج.م</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="discount" class="form-label">خصم على الفاتورة</label>
+                            <input type="number" class="form-control" id="discount" name="discount" value="0" step="0.01">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="paid_amount" class="form-label">المبلغ المدفوع</label>
+                            <input type="number" class="form-control" id="paid_amount" name="paid_amount" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="remaining" class="form-label">المتبقي</label>
+                            <input type="number" class="form-control" id="remaining" readonly>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">ملاحظات</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ وطباعة</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function addProductRow() {
+    const tbody = document.querySelector('#productsTable tbody');
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>
+            <input type="text" class="form-control barcode-input" onkeydown="handleBarcodeInput(event, this)">
+        </td>
+        <td>
+            <select class="form-select product-select" onchange="updateProductDetails(this)">
+                <option value="">اختر منتج</option>
+                {% for product in products %}
+                <option value="{{ product.id }}"
+                        data-price="{{ product.price }}"
+                        data-max-quantity="{{ product.quantity }}"
+                        data-barcode="{{ product.barcode }}">
+                    {{ product.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </td>
+        <td><input type="number" class="form-control quantity-input" min="1" value="1" onchange="updateRowTotal(this)"></td>
+        <td><input type="number" class="form-control price-input" step="0.01" onchange="updateRowTotal(this)"></td>
+        <td><input type="number" class="form-control discount-input" value="0" step="0.01" onchange="updateRowTotal(this)"></td>
+        <td><span class="row-total">0.00</span> ج.م</td>
+        <td>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeProductRow(this)">
+                حذف
+            </button>
+        </td>
+    `;
+    tbody.appendChild(row);
+}
+
+function updateProductDetails(select) {
+    const row = select.closest('tr');
+    const option = select.selectedOptions[0];
+    const price = option.dataset.price;
+    const maxQuantity = option.dataset.maxQuantity;
+    
+    row.querySelector('.price-input').value = price;
+    row.querySelector('.quantity-input').max = maxQuantity;
+    
+    updateRowTotal(row.querySelector('.quantity-input'));
+}
+
+function updateRowTotal(input) {
+    const row = input.closest('tr');
+    const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+    const price = parseFloat(row.querySelector('.price-input').value) || 0;
+    const discount = parseFloat(row.querySelector('.discount-input').value) || 0;
+    
+    const total = (quantity * price) - discount;
+    row.querySelector('.row-total').textContent = total.toFixed(2);
+    
+    updateInvoiceTotal();
+}
+
+function updateInvoiceTotal() {
+    const totals = Array.from(document.querySelectorAll('.row-total'))
+        .map(span => parseFloat(span.textContent));
+    const invoiceTotal = totals.reduce((sum, total) => sum + total, 0);
+    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    const finalTotal = invoiceTotal - discount;
+    
+    document.getElementById('totalAmount').textContent = finalTotal.toFixed(2);
+    
+    const paidAmount = parseFloat(document.getElementById('paid_amount').value) || 0;
+    document.getElementById('remaining').value = (finalTotal - paidAmount).toFixed(2);
+}
+
+function removeProductRow(button) {
+    button.closest('tr').remove();
+    updateInvoiceTotal();
+}
+
+function handleBarcodeInput(event, input) {
+    if (event.keyCode === 13) { // Enter key
+        event.preventDefault();
+        const barcode = input.value.trim();
+        
+        if (!barcode) return;
+        
+        const row = input.closest('tr');
+        const select = row.querySelector('.product-select');
+        
+        // البحث عن المنتج بالباركود
+        const option = Array.from(select.options).find(opt => {
+            const product = opt.dataset;
+            return product.barcode === barcode;
+        });
+        
+        if (option) {
+            select.value = option.value;
+            updateProductDetails(select);
+            input.value = '';
+            
+            // التركيز على حقل الكمية
+            row.querySelector('.quantity-input').focus();
+        } else {
+            alert('لم يتم العثور على منتج بهذا الباركود');
+            input.value = '';
+        }
+    }
+}
+
+document.getElementById('invoiceForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const items = [];
+    
+    document.querySelectorAll('#productsTable tbody tr').forEach(row => {
+        const product_id = row.querySelector('.product-select').value;
+        if (product_id) {
+            items.push({
+                product_id: product_id,
+                quantity: parseFloat(row.querySelector('.quantity-input').value),
+                price: parseFloat(row.querySelector('.price-input').value),
+                discount: parseFloat(row.querySelector('.discount-input').value),
+                total: parseFloat(row.querySelector('.row-total').textContent)
+            });
+        }
+    });
+    
+    formData.append('items', JSON.stringify(items));
+    
+    fetch('/api/sales/create', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.open(`/api/sales/${data.invoice_id}/print`);
+            location.reload();
+        } else {
+            alert(data.message || 'حدث خطأ أثناء حفظ الفاتورة');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء حفظ الفاتورة');
+    });
+});
+</script>
+{% endblock %}

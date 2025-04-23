@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>إدارة المخزون</h2>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                إضافة منتج جديد
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- فلتر البحث والتصنيف -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <input type="text" class="form-control" id="searchInventory"
+                       onkeyup="searchTable('searchInventory', 'inventoryTable')"
+                       placeholder="بحث في المخزون...">
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" id="categoryFilter" onchange="filterByCategory()">
+                    <option value="">كل التصنيفات</option>
+                    <option value="أقلام">أقلام</option>
+                    <option value="دفاتر">دفاتر</option>
+                    <option value="حقائب">حقائب</option>
+                    <option value="أدوات هندسية">أدوات هندسية</option>
+                    <option value="أدوات فنية">أدوات فنية</option>
+                    <option value="ملفات">ملفات وحافظات</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-warning" onclick="checkLowStock()">
+                    المنتجات منخفضة المخزون
+                    <span class="badge bg-danger" id="low-stock-badge">0</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- جدول المخزون -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table" id="inventoryTable">
+                <thead>
+                    <tr>
+                        <th>الباركود</th>
+                        <th>اسم المنتج</th>
+                        <th>الوصف</th>
+                        <th>التصنيف</th>
+                        <th>سعر البيع</th>
+                        <th>سعر التكلفة</th>
+                        <th>الكمية</th>
+                        <th>الحد الأدنى</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr class="{% if product.quantity <= product.min_quantity %}table-warning{% endif %}">
+                        <td>{{ product.barcode }}</td>
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.description }}</td>
+                        <td>{{ product.category }}</td>
+                        <td>{{ product.price }} ج.م</td>
+                        <td>{{ product.cost_price }} ج.م</td>
+                        <td>{{ product.quantity }}</td>
+                        <td>{{ product.min_quantity }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-info" onclick="editProduct('{{ product.id }}')">
+                                    تعديل
+                                </button>
+                                <button class="btn btn-sm btn-success" onclick="printBarcode('{{ product.id }}')">
+                                    باركود
+                                </button>
+                                <button class="btn btn-sm btn-danger"
+                                        onclick="confirmDelete(event, 'هل أنت متأكد من حذف هذا المنتج؟')">
+                                    حذف
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- نموذج إضافة/تعديل منتج -->
+<div class="modal fade" id="addProductModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إضافة منتج جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="productForm" method="POST" action="{{ url_for('add_product') }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="barcode" class="form-label">الباركود</label>
+                                <input type="text" class="form-control" id="barcode" name="barcode" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="name" class="form-label">اسم المنتج</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">الوصف</label>
+                                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="category" class="form-label">التصنيف</label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="أقلام">أقلام</option>
+                                    <option value="دفاتر">دفاتر</option>
+                                    <option value="حقائب">حقائب</option>
+                                    <option value="أدوات هندسية">أدوات هندسية</option>
+                                    <option value="أدوات فنية">أدوات فنية</option>
+                                    <option value="ملفات">ملفات وحافظات</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="price" class="form-label">سعر البيع</label>
+                                <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="cost_price" class="form-label">سعر التكلفة</label>
+                                <input type="number" step="0.01" class="form-control" id="cost_price" name="cost_price" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">الكمية</label>
+                                <input type="number" class="form-control" id="quantity" name="quantity" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="min_quantity" class="form-label">الحد الأدنى للمخزون</label>
+                                <input type="number" class="form-control" id="min_quantity" name="min_quantity" value="10">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
